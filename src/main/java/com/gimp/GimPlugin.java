@@ -974,53 +974,48 @@ public class GimPlugin extends Plugin
 	}
 
 	/**
-	 * Opens the world map and navigates to the specified GIM member's location.
-	 * If the member is not online or doesn't have a location, this method does nothing.
-	 * The world map must be open for this to work.
+	 * Shows information about the specified GIM member's location including their region/area.
+	 * This helps locate members who are in different sub-regions.
 	 *
-	 * @param gimpName the name of the GIM member to navigate to
+	 * @param gimpName the name of the GIM member to locate
 	 */
 	public void navigateToMemberLocation(String gimpName)
 	{
 		GimPlayer gimp = group.getGimp(gimpName);
 		if (gimp == null || gimp.getLocation() == null || gimp.getWorld() == OFFLINE_WORLD)
 		{
-			log.debug("Cannot navigate to {}: member is offline or has no location", gimpName);
+			log.info("Cannot locate {}: member is offline or has no location", gimpName);
 			return;
 		}
 
 		if (!gimWorldMapPointManager.hasPoint(gimpName))
 		{
-			log.debug("Cannot navigate to {}: no world map point exists", gimpName);
+			log.info("Cannot locate {}: no world map point exists", gimpName);
 			return;
 		}
 
+		GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
+		WorldPoint memberLocation = gimWorldMapPoint.getWorldPoint();
+		
 		clientThread.invokeLater(() -> {
-			GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
-			WorldPoint memberLocation = gimWorldMapPoint.getWorldPoint();
+			// Get region information
+			int regionId = memberLocation.getRegionID();
+			int regionX = memberLocation.getRegionX();
+			int regionY = memberLocation.getRegionY();
 			
-			try
+			// Check if the world map is open
+			final Widget worldMapView = client.getWidget(InterfaceID.Worldmap.MAP_CONTAINER);
+			
+			String locationInfo = String.format("%s is at %s (Region: %d, RegionX: %d, RegionY: %d, Plane: %d)", 
+				gimpName, memberLocation, regionId, regionX, regionY, memberLocation.getPlane());
+			
+			if (worldMapView == null || worldMapView.isHidden())
 			{
-				// Check if the world map is open
-				final Widget worldMapView = client.getWidget(InterfaceID.Worldmap.MAP_CONTAINER);
-				
-				// If world map is not open, we can't navigate programmatically
-				if (worldMapView == null || worldMapView.isHidden())
-				{
-					log.info("World map not open. Please open the world map and try again.");
-					return;
-				}
-				
-				// Use the RuneLite world map script to jump to the member's location
-				// Script 2375 takes a single packed coordinate: (y << 14) | x
-				int packedCoord = (memberLocation.getY() << 14) | memberLocation.getX();
-				client.runScript(2375, packedCoord);
-				
-				log.info("Navigated world map to {}'s location at {}", gimpName, memberLocation);
+				log.info("{}. Open the world map and click on their icon to jump to their location.", locationInfo);
 			}
-			catch (Exception e)
+			else
 			{
-				log.error("Failed to navigate to {}'s location: {}", gimpName, e.getMessage());
+				log.info("{}. Look for their icon on the world map and click it to jump to their location.", locationInfo);
 			}
 		});
 	}

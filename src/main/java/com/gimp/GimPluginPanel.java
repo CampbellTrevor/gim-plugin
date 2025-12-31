@@ -496,7 +496,7 @@ public class GimPluginPanel extends PluginPanel
 		overallInfo.add(statusWrapper);
 
 		// Add locate on map button
-		locateButton.setToolTipText("Center the world map on this member's location (world map must be open)");
+		locateButton.setToolTipText("Show this member's location and region info to help find them on the world map");
 		locateButton.addActionListener((e) -> {
 			if (selectedGimp != null)
 			{
