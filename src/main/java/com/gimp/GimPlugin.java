@@ -973,6 +973,183 @@ public class GimPlugin extends Plugin
 		}
 	}
 
+	/**
+	 * Gets the region name for the specified GIM member's location.
+	 * Returns the region name or "Unknown Region" if the member is offline or has no location.
+	 *
+	 * @param gimpName the name of the GIM member
+	 * @return the region name where the member is located
+	 */
+	public String getMemberRegionName(String gimpName)
+	{
+		GimPlayer gimp = group.getGimp(gimpName);
+		if (gimp == null || gimp.getLocation() == null || gimp.getWorld() == OFFLINE_WORLD)
+		{
+			return "Unknown Region";
+		}
+
+		if (!gimWorldMapPointManager.hasPoint(gimpName))
+		{
+			return "Unknown Region";
+		}
+
+		GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
+		WorldPoint location = gimWorldMapPoint.getWorldPoint();
+		
+		return getRegionName(location);
+	}
+
+	/**
+	 * Gets a human-readable sub-region/area name from a WorldPoint.
+	 * Uses plane and region ID to identify OSRS sub-regions like "Gielinor Surface", "Ancient Cavern", etc.
+	 *
+	 * @param point the world point
+	 * @return the sub-region name
+	 */
+	private String getRegionName(WorldPoint point)
+	{
+		int x = point.getX();
+		int y = point.getY();
+		int plane = point.getPlane();
+		int regionId = point.getRegionID();
+		
+		// Plane 0 is generally the main surface
+		if (plane == 0)
+		{
+			// Check for specific underground areas that appear on plane 0
+			// Ancient Cavern (region IDs around 6993-6995)
+			if (regionId >= 6993 && regionId <= 6995)
+			{
+				return "Ancient Cavern";
+			}
+			// Fossil Island underwater (region IDs around 14638-14640)
+			else if (regionId >= 14638 && regionId <= 14640)
+			{
+				return "Fossil Island Underwater";
+			}
+			// Default plane 0 is Gielinor Surface
+			else
+			{
+				return "Gielinor Surface";
+			}
+		}
+		// Plane 1 is typically first floor/upper level
+		else if (plane == 1)
+		{
+			// Grand Tree (region IDs around 9778-9779)
+			if (regionId >= 9778 && regionId <= 9779)
+			{
+				return "Grand Tree (1st floor)";
+			}
+			// Lumbridge Castle (region IDs around 12850)
+			else if (regionId == 12850)
+			{
+				return "Lumbridge Castle (1st floor)";
+			}
+			else
+			{
+				return "Building Interior (1st floor)";
+			}
+		}
+		// Plane 2 is typically second floor
+		else if (plane == 2)
+		{
+			// Grand Tree top (region IDs around 9778-9779)
+			if (regionId >= 9778 && regionId <= 9779)
+			{
+				return "Grand Tree (2nd floor)";
+			}
+			// Lumbridge Castle (region IDs around 12850)
+			else if (regionId == 12850)
+			{
+				return "Lumbridge Castle (2nd floor)";
+			}
+			else
+			{
+				return "Building Interior (2nd floor)";
+			}
+		}
+		// Plane 3 is typically roof/top floor
+		else if (plane == 3)
+		{
+			// Grand Tree top
+			if (regionId >= 9778 && regionId <= 9779)
+			{
+				return "Grand Tree (top)";
+			}
+			else
+			{
+				return "Building Interior (top floor)";
+			}
+		}
+		// Special planes for specific areas
+		// Many dungeons, caves, and underground areas use different plane values
+		else
+		{
+			// Motherlode Mine (region IDs around 14679-14680, plane varies)
+			if (regionId >= 14679 && regionId <= 14680)
+			{
+				return "Motherlode Mine";
+			}
+			// Catacombs of Kourend (region IDs around 6457-6459)
+			else if (regionId >= 6457 && regionId <= 6459)
+			{
+				return "Catacombs of Kourend";
+			}
+			// Default for unknown special planes
+			else
+			{
+				return String.format("Underground/Special Area (Region %d, Plane %d)", regionId, plane);
+			}
+		}
+	}
+
+	/**
+	 * Shows information about the specified GIM member's location including their region/area.
+	 * This helps locate members who are in different sub-regions.
+	 *
+	 * @param gimpName the name of the GIM member to locate
+	 */
+	public void navigateToMemberLocation(String gimpName)
+	{
+		GimPlayer gimp = group.getGimp(gimpName);
+		if (gimp == null || gimp.getLocation() == null || gimp.getWorld() == OFFLINE_WORLD)
+		{
+			log.info("Cannot locate {}: member is offline or has no location", gimpName);
+			return;
+		}
+
+		if (!gimWorldMapPointManager.hasPoint(gimpName))
+		{
+			log.info("Cannot locate {}: no world map point exists", gimpName);
+			return;
+		}
+
+		GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
+		WorldPoint memberLocation = gimWorldMapPoint.getWorldPoint();
+		
+		clientThread.invokeLater(() -> {
+			// Get region information
+			int regionId = memberLocation.getRegionID();
+			String regionName = getRegionName(memberLocation);
+			
+			// Check if the world map is open
+			final Widget worldMapView = client.getWidget(InterfaceID.Worldmap.MAP_CONTAINER);
+			
+			String locationInfo = String.format("%s is at %s in %s (Region ID: %d)", 
+				gimpName, memberLocation, regionName, regionId);
+			
+			if (worldMapView == null || worldMapView.isHidden())
+			{
+				log.info("{}. Open the world map and click on their icon to jump to their location.", locationInfo);
+			}
+			else
+			{
+				log.info("{}. Look for their icon on the world map and click it to jump to their location.", locationInfo);
+			}
+		});
+	}
+
 	@Provides
 	GimPluginConfig provideConfig(ConfigManager configManager)
 	{
