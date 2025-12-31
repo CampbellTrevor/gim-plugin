@@ -1000,83 +1000,107 @@ public class GimPlugin extends Plugin
 	}
 
 	/**
-	 * Gets a human-readable region name from a WorldPoint.
-	 * Uses coordinate ranges to identify common OSRS regions.
+	 * Gets a human-readable sub-region/area name from a WorldPoint.
+	 * Uses plane and region ID to identify OSRS sub-regions like "Gielinor Surface", "Ancient Cavern", etc.
 	 *
 	 * @param point the world point
-	 * @return the region name
+	 * @return the sub-region name
 	 */
 	private String getRegionName(WorldPoint point)
 	{
 		int x = point.getX();
 		int y = point.getY();
 		int plane = point.getPlane();
+		int regionId = point.getRegionID();
 		
-		// Lumbridge area
-		if (x >= 3200 && x <= 3230 && y >= 3200 && y <= 3230 && plane == 0)
+		// Plane 0 is generally the main surface
+		if (plane == 0)
 		{
-			return "Lumbridge";
+			// Check for specific underground areas that appear on plane 0
+			// Ancient Cavern (region IDs around 6993-6995)
+			if (regionId >= 6993 && regionId <= 6995)
+			{
+				return "Ancient Cavern";
+			}
+			// Fossil Island underwater (region IDs around 14638-14640)
+			else if (regionId >= 14638 && regionId <= 14640)
+			{
+				return "Fossil Island Underwater";
+			}
+			// Default plane 0 is Gielinor Surface
+			else
+			{
+				return "Gielinor Surface";
+			}
 		}
-		// Varrock area
-		else if (x >= 3200 && x <= 3230 && y >= 3400 && y <= 3500 && plane == 0)
+		// Plane 1 is typically first floor/upper level
+		else if (plane == 1)
 		{
-			return "Varrock";
+			// Grand Tree (region IDs around 9778-9779)
+			if (regionId >= 9778 && regionId <= 9779)
+			{
+				return "Grand Tree (1st floor)";
+			}
+			// Lumbridge Castle (region IDs around 12850)
+			else if (regionId == 12850)
+			{
+				return "Lumbridge Castle (1st floor)";
+			}
+			else
+			{
+				return "Building Interior (1st floor)";
+			}
 		}
-		// Falador area
-		else if (x >= 2950 && x <= 3000 && y >= 3310 && y <= 3390 && plane == 0)
+		// Plane 2 is typically second floor
+		else if (plane == 2)
 		{
-			return "Falador";
+			// Grand Tree top (region IDs around 9778-9779)
+			if (regionId >= 9778 && regionId <= 9779)
+			{
+				return "Grand Tree (2nd floor)";
+			}
+			// Lumbridge Castle (region IDs around 12850)
+			else if (regionId == 12850)
+			{
+				return "Lumbridge Castle (2nd floor)";
+			}
+			else
+			{
+				return "Building Interior (2nd floor)";
+			}
 		}
-		// Ardougne area
-		else if (x >= 2600 && x <= 2700 && y >= 3250 && y <= 3350 && plane == 0)
+		// Plane 3 is typically roof/top floor
+		else if (plane == 3)
 		{
-			return "Ardougne";
+			// Grand Tree top
+			if (regionId >= 9778 && regionId <= 9779)
+			{
+				return "Grand Tree (top)";
+			}
+			else
+			{
+				return "Building Interior (top floor)";
+			}
 		}
-		// Edgeville area
-		else if (x >= 3070 && x <= 3110 && y >= 3480 && y <= 3510 && plane == 0)
-		{
-			return "Edgeville";
-		}
-		// Grand Exchange
-		else if (x >= 3150 && x <= 3180 && y >= 3460 && y <= 3490 && plane == 0)
-		{
-			return "Grand Exchange";
-		}
-		// Wilderness (any plane)
-		else if (y >= 3520)
-		{
-			int wildLevel = (y - 3520) / 8 + 1;
-			return String.format("Wilderness (Level %d)", wildLevel);
-		}
-		// Draynor area
-		else if (x >= 3070 && x <= 3110 && y >= 3220 && y <= 3270 && plane == 0)
-		{
-			return "Draynor Village";
-		}
-		// Catherby area
-		else if (x >= 2800 && x <= 2870 && y >= 3420 && y <= 3460 && plane == 0)
-		{
-			return "Catherby";
-		}
-		// Seers' Village area
-		else if (x >= 2690 && x <= 2750 && y >= 3460 && y <= 3500 && plane == 0)
-		{
-			return "Seers' Village";
-		}
-		// Rellekka area
-		else if (x >= 2630 && x <= 2690 && y >= 3660 && y <= 3710 && plane == 0)
-		{
-			return "Rellekka";
-		}
-		// Yanille area
-		else if (x >= 2540 && x <= 2620 && y >= 3080 && y <= 3110 && plane == 0)
-		{
-			return "Yanille";
-		}
-		// Default to region ID
+		// Special planes for specific areas
+		// Many dungeons, caves, and underground areas use different plane values
 		else
 		{
-			return "Region " + point.getRegionID();
+			// Motherlode Mine (region IDs around 14679-14680, plane varies)
+			if (regionId >= 14679 && regionId <= 14680)
+			{
+				return "Motherlode Mine";
+			}
+			// Catacombs of Kourend (region IDs around 6457-6459)
+			else if (regionId >= 6457 && regionId <= 6459)
+			{
+				return "Catacombs of Kourend";
+			}
+			// Default for unknown special planes
+			else
+			{
+				return String.format("Underground/Special Area (Region %d, Plane %d)", regionId, plane);
+			}
 		}
 	}
 
