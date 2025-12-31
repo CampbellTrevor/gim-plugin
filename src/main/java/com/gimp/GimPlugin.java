@@ -52,6 +52,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.VarbitID;
+import net.runelite.api.gameval.ScriptID;
 import net.runelite.client.input.KeyManager;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
@@ -971,6 +972,53 @@ public class GimPlugin extends Plugin
 		{
 			gimWorldMapPointManager.removePoint(name);
 		}
+	}
+
+	/**
+	 * Opens the world map and navigates to the specified GIM member's location.
+	 * If the member is not online or doesn't have a location, this method does nothing.
+	 *
+	 * @param gimpName the name of the GIM member to navigate to
+	 */
+	public void navigateToMemberLocation(String gimpName)
+	{
+		GimPlayer gimp = group.getGimp(gimpName);
+		if (gimp == null || gimp.getLocation() == null || gimp.getWorld() == OFFLINE_WORLD)
+		{
+			log.debug("Cannot navigate to {}: member is offline or has no location", gimpName);
+			return;
+		}
+
+		clientThread.invokeLater(() -> {
+			// Get the member's location
+			if (gimWorldMapPointManager.hasPoint(gimpName))
+			{
+				GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
+				WorldPoint memberLocation = gimWorldMapPoint.getWorldPoint();
+				
+				// Open the world map widget
+				Widget worldMapWidget = client.getWidget(ComponentID.Worldmap.WORLDMAP_VIEW);
+				
+				// If world map is not open, open it first
+				if (worldMapWidget == null || worldMapWidget.isHidden())
+				{
+					// Send the key press to open world map (typically this is done via the player's key binding)
+					// We'll use the script to open world map
+					client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD, 
+						memberLocation.getX(), 
+						memberLocation.getY());
+				}
+				else
+				{
+					// World map is already open, just jump to coordinates
+					client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD, 
+						memberLocation.getX(), 
+						memberLocation.getY());
+				}
+				
+				log.debug("Navigated to {}'s location: {}", gimpName, memberLocation);
+			}
+		});
 	}
 
 	@Provides

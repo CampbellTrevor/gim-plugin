@@ -130,6 +130,7 @@ public class GimPluginPanel extends PluginPanel
 	private static final String HTML_LABEL_TEMPLATE = "<html><body style='color:%s'>%s<span style='color:white'>%s</span></body></html>";
 
 	private final Group group;
+	private final GimPlugin plugin;
 
 	@Inject
 	private Client client;
@@ -154,6 +155,7 @@ public class GimPluginPanel extends PluginPanel
 	private final ProgressBar hpBar = new ProgressBar();
 	private final ProgressBar prayerBar = new ProgressBar();
 	private final JButton refreshButton = new JButton("Refresh");
+	private final JButton locateButton = new JButton("Locate on Map");
 	private final JLabel activityLabel = new JLabel();
 
 	private final GimNotes gimNotes = new GimNotes();
@@ -181,6 +183,7 @@ public class GimPluginPanel extends PluginPanel
 	@Inject
 	public GimPluginPanel(GimPlugin plugin, SpriteManager spriteManager)
 	{
+		this.plugin = plugin;
 		this.group = plugin.getGroup();
 		this.gimNotes.init(plugin);
 		this.spriteManager = spriteManager;
@@ -436,7 +439,7 @@ public class GimPluginPanel extends PluginPanel
 		// Add icon and contents
 		final JPanel overallInfo = new JPanel();
 		overallInfo.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		overallInfo.setLayout(new DynamicGridLayout(3, 1, 0, 4));
+		overallInfo.setLayout(new DynamicGridLayout(4, 1, 0, 4));
 		overallInfo.setBorder(new EmptyBorder(2, 10, 2, 10));
 
 		// Add title panel
@@ -491,6 +494,16 @@ public class GimPluginPanel extends PluginPanel
 		statusWrapper.add(hpWrapper);
 		statusWrapper.add(prayerWrapper);
 		overallInfo.add(statusWrapper);
+
+		// Add locate on map button
+		locateButton.setToolTipText("Open world map and navigate to this member's location");
+		locateButton.addActionListener((e) -> {
+			if (selectedGimp != null)
+			{
+				plugin.navigateToMemberLocation(selectedGimp);
+			}
+		});
+		overallInfo.add(locateButton);
 
 		// Add overall info to the container
 		overallPanel.add(overallInfo);
@@ -747,6 +760,10 @@ public class GimPluginPanel extends PluginPanel
 		setPrayerBar(gimpName, gimp.getPrayer(), gimp.getMaxPrayer());
 		setLastActivity(gimpName, gimp.getLastActivity(), gimp.getWorld());
 		setNotes(gimpName, gimp.getNotes());
+		
+		// Enable/disable locate button based on member's online status and location
+		boolean canLocate = gimp.getWorld() != 0 && gimp.getLocation() != null;
+		locateButton.setEnabled(canLocate);
 	}
 
 	/**
