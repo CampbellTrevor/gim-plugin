@@ -1014,8 +1014,8 @@ public class GimPlugin extends Plugin
 				
 				// Use the RuneLite world map script to jump to the member's location
 				// WORLDMAP_JUMPTODISPLAYCOORD takes world X and Y coordinates
-				client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD, 
-					memberLocation.getX(), 
+				client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD,
+					memberLocation.getX(),
 					memberLocation.getY());
 				
 				log.info("Navigated world map to {}'s location at {}", gimpName, memberLocation);
