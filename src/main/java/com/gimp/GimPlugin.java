@@ -989,34 +989,42 @@ public class GimPlugin extends Plugin
 			return;
 		}
 
+		if (!gimWorldMapPointManager.hasPoint(gimpName))
+		{
+			log.debug("Cannot navigate to {}: no world map point exists", gimpName);
+			return;
+		}
+
 		clientThread.invokeLater(() -> {
-			// Get the member's location
-			if (gimWorldMapPointManager.hasPoint(gimpName))
+			GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
+			WorldPoint memberLocation = gimWorldMapPoint.getWorldPoint();
+			
+			try
 			{
-				GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
-				WorldPoint memberLocation = gimWorldMapPoint.getWorldPoint();
+				// Check if the world map is open
+				final Widget worldMapView = client.getWidget(InterfaceID.Worldmap.MAP_CONTAINER);
 				
-				// Open the world map widget
-				Widget worldMapWidget = client.getWidget(ComponentID.Worldmap.WORLDMAP_VIEW);
-				
-				// If world map is not open, open it first
-				if (worldMapWidget == null || worldMapWidget.isHidden())
+				// If world map is not open, we can't navigate programmatically
+				// The user will need to open the world map first
+				if (worldMapView == null || worldMapView.isHidden())
 				{
-					// Send the key press to open world map (typically this is done via the player's key binding)
-					// We'll use the script to open world map
-					client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD, 
-						memberLocation.getX(), 
-						memberLocation.getY());
-				}
-				else
-				{
-					// World map is already open, just jump to coordinates
-					client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD, 
-						memberLocation.getX(), 
-						memberLocation.getY());
+					log.info("World map not open. Please open the world map and try again.");
+					// Note: In future, we could try to open the world map programmatically
+					// For now, users should open the map first, then this button will center it
+					return;
 				}
 				
-				log.debug("Navigated to {}'s location: {}", gimpName, memberLocation);
+				// Use the RuneLite world map script to jump to the member's location
+				// ScriptID.WORLDMAP_JUMPTODISPLAYCOORD takes world coordinates and centers the map
+				client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD, 
+					memberLocation.getX(), 
+					memberLocation.getY());
+				
+				log.info("Navigated world map to {}'s location at {}", gimpName, memberLocation);
+			}
+			catch (Exception e)
+			{
+				log.error("Failed to navigate to {}'s location: {}", gimpName, e.getMessage());
 			}
 		});
 	}
