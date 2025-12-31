@@ -974,6 +974,113 @@ public class GimPlugin extends Plugin
 	}
 
 	/**
+	 * Gets the region name for the specified GIM member's location.
+	 * Returns the region name or "Unknown Region" if the member is offline or has no location.
+	 *
+	 * @param gimpName the name of the GIM member
+	 * @return the region name where the member is located
+	 */
+	public String getMemberRegionName(String gimpName)
+	{
+		GimPlayer gimp = group.getGimp(gimpName);
+		if (gimp == null || gimp.getLocation() == null || gimp.getWorld() == OFFLINE_WORLD)
+		{
+			return "Unknown Region";
+		}
+
+		if (!gimWorldMapPointManager.hasPoint(gimpName))
+		{
+			return "Unknown Region";
+		}
+
+		GimWorldMapPoint gimWorldMapPoint = gimWorldMapPointManager.getPoint(gimpName);
+		WorldPoint location = gimWorldMapPoint.getWorldPoint();
+		
+		return getRegionName(location);
+	}
+
+	/**
+	 * Gets a human-readable region name from a WorldPoint.
+	 * Uses coordinate ranges to identify common OSRS regions.
+	 *
+	 * @param point the world point
+	 * @return the region name
+	 */
+	private String getRegionName(WorldPoint point)
+	{
+		int x = point.getX();
+		int y = point.getY();
+		int plane = point.getPlane();
+		
+		// Lumbridge area
+		if (x >= 3200 && x <= 3230 && y >= 3200 && y <= 3230 && plane == 0)
+		{
+			return "Lumbridge";
+		}
+		// Varrock area
+		else if (x >= 3200 && x <= 3230 && y >= 3400 && y <= 3500 && plane == 0)
+		{
+			return "Varrock";
+		}
+		// Falador area
+		else if (x >= 2950 && x <= 3000 && y >= 3310 && y <= 3390 && plane == 0)
+		{
+			return "Falador";
+		}
+		// Ardougne area
+		else if (x >= 2600 && x <= 2700 && y >= 3250 && y <= 3350 && plane == 0)
+		{
+			return "Ardougne";
+		}
+		// Edgeville area
+		else if (x >= 3070 && x <= 3110 && y >= 3480 && y <= 3510 && plane == 0)
+		{
+			return "Edgeville";
+		}
+		// Grand Exchange
+		else if (x >= 3150 && x <= 3180 && y >= 3460 && y <= 3490 && plane == 0)
+		{
+			return "Grand Exchange";
+		}
+		// Wilderness (any plane)
+		else if (y >= 3520)
+		{
+			int wildLevel = (y - 3520) / 8 + 1;
+			return String.format("Wilderness (Level %d)", wildLevel);
+		}
+		// Draynor area
+		else if (x >= 3070 && x <= 3110 && y >= 3220 && y <= 3270 && plane == 0)
+		{
+			return "Draynor Village";
+		}
+		// Catherby area
+		else if (x >= 2800 && x <= 2870 && y >= 3420 && y <= 3460 && plane == 0)
+		{
+			return "Catherby";
+		}
+		// Seers' Village area
+		else if (x >= 2690 && x <= 2750 && y >= 3460 && y <= 3500 && plane == 0)
+		{
+			return "Seers' Village";
+		}
+		// Rellekka area
+		else if (x >= 2630 && x <= 2690 && y >= 3660 && y <= 3710 && plane == 0)
+		{
+			return "Rellekka";
+		}
+		// Yanille area
+		else if (x >= 2540 && x <= 2620 && y >= 3080 && y <= 3110 && plane == 0)
+		{
+			return "Yanille";
+		}
+		// Default to region ID
+		else
+		{
+			return "Region " + point.getRegionID();
+		}
+	}
+
+	/**
 	 * Shows information about the specified GIM member's location including their region/area.
 	 * This helps locate members who are in different sub-regions.
 	 *
@@ -1000,14 +1107,13 @@ public class GimPlugin extends Plugin
 		clientThread.invokeLater(() -> {
 			// Get region information
 			int regionId = memberLocation.getRegionID();
-			int regionX = memberLocation.getRegionX();
-			int regionY = memberLocation.getRegionY();
+			String regionName = getRegionName(memberLocation);
 			
 			// Check if the world map is open
 			final Widget worldMapView = client.getWidget(InterfaceID.Worldmap.MAP_CONTAINER);
 			
-			String locationInfo = String.format("%s is at %s (Region: %d, RegionX: %d, RegionY: %d, Plane: %d)", 
-				gimpName, memberLocation, regionId, regionX, regionY, memberLocation.getPlane());
+			String locationInfo = String.format("%s is at %s in %s (Region ID: %d)", 
+				gimpName, memberLocation, regionName, regionId);
 			
 			if (worldMapView == null || worldMapView.isHidden())
 			{

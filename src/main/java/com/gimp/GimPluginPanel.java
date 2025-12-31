@@ -155,7 +155,7 @@ public class GimPluginPanel extends PluginPanel
 	private final ProgressBar hpBar = new ProgressBar();
 	private final ProgressBar prayerBar = new ProgressBar();
 	private final JButton refreshButton = new JButton("Refresh");
-	private final JButton locateButton = new JButton("Locate on Map");
+	private final JLabel locationLabel = new JLabel("Location: --");
 	private final JLabel activityLabel = new JLabel();
 
 	private final GimNotes gimNotes = new GimNotes();
@@ -495,15 +495,11 @@ public class GimPluginPanel extends PluginPanel
 		statusWrapper.add(prayerWrapper);
 		overallInfo.add(statusWrapper);
 
-		// Add locate on map button
-		locateButton.setToolTipText("Show this member's location and region info to help find them on the world map");
-		locateButton.addActionListener((e) -> {
-			if (selectedGimp != null)
-			{
-				plugin.navigateToMemberLocation(selectedGimp);
-			}
-		});
-		overallInfo.add(locateButton);
+		// Add location label
+		locationLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		locationLabel.setFont(FontManager.getRunescapeSmallFont());
+		locationLabel.setToolTipText("Current region of this member");
+		overallInfo.add(locationLabel);
 
 		// Add overall info to the container
 		overallPanel.add(overallInfo);
@@ -761,11 +757,9 @@ public class GimPluginPanel extends PluginPanel
 		setLastActivity(gimpName, gimp.getLastActivity(), gimp.getWorld());
 		setNotes(gimpName, gimp.getNotes());
 		
-		// Enable/disable locate button based on member's online status, location, and ghost mode
-		boolean canLocate = gimp.getWorld() != GimPlugin.OFFLINE_WORLD
-			&& gimp.getLocation() != null
-			&& gimp.shouldIncludeLocation();
-		locateButton.setEnabled(canLocate);
+		// Update location label with region name
+		String regionName = plugin.getMemberRegionName(gimpName);
+		locationLabel.setText("Location: " + regionName);
 	}
 
 	/**
