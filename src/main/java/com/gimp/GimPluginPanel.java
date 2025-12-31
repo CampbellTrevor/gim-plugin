@@ -761,8 +761,10 @@ public class GimPluginPanel extends PluginPanel
 		setLastActivity(gimpName, gimp.getLastActivity(), gimp.getWorld());
 		setNotes(gimpName, gimp.getNotes());
 		
-		// Enable/disable locate button based on member's online status and location
-		boolean canLocate = gimp.getWorld() != 0 && gimp.getLocation() != null;
+		// Enable/disable locate button based on member's online status, location, and ghost mode
+		boolean canLocate = gimp.getWorld() != 0 
+			&& gimp.getLocation() != null 
+			&& gimp.shouldIncludeLocation();
 		locateButton.setEnabled(canLocate);
 	}
 

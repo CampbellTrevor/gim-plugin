@@ -977,6 +977,7 @@ public class GimPlugin extends Plugin
 	/**
 	 * Opens the world map and navigates to the specified GIM member's location.
 	 * If the member is not online or doesn't have a location, this method does nothing.
+	 * The world map must be open for this to work.
 	 *
 	 * @param gimpName the name of the GIM member to navigate to
 	 */
@@ -1005,17 +1006,14 @@ public class GimPlugin extends Plugin
 				final Widget worldMapView = client.getWidget(InterfaceID.Worldmap.MAP_CONTAINER);
 				
 				// If world map is not open, we can't navigate programmatically
-				// The user will need to open the world map first
 				if (worldMapView == null || worldMapView.isHidden())
 				{
 					log.info("World map not open. Please open the world map and try again.");
-					// Note: In future, we could try to open the world map programmatically
-					// For now, users should open the map first, then this button will center it
 					return;
 				}
 				
 				// Use the RuneLite world map script to jump to the member's location
-				// ScriptID.WORLDMAP_JUMPTODISPLAYCOORD takes world coordinates and centers the map
+				// Script ID 2375 is WORLDMAP_JUMPTODISPLAYCOORD which takes world X and Y coordinates
 				client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD, 
 					memberLocation.getX(), 
 					memberLocation.getY());
