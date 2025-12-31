@@ -52,7 +52,6 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.VarbitID;
-import net.runelite.api.gameval.ScriptID;
 import net.runelite.client.input.KeyManager;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
@@ -1013,8 +1012,8 @@ public class GimPlugin extends Plugin
 				}
 				
 				// Use the RuneLite world map script to jump to the member's location
-				// WORLDMAP_JUMPTODISPLAYCOORD takes world X and Y coordinates
-				client.runScript(ScriptID.WORLDMAP_JUMPTODISPLAYCOORD,
+				// Script 2375 (WORLDMAP_JUMPTODISPLAYCOORD) takes world X and Y coordinates
+				client.runScript(2375,
 					memberLocation.getX(),
 					memberLocation.getY());
 				
